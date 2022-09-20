@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNet.OData.Builder;
-using Microsoft.AspNetCore.Mvc;
+﻿using Asp.Versioning;
+using Asp.Versioning.OData;
+using Microsoft.OData.ModelBuilder;
 using WebApplication9.Models;
 
 namespace WebApplication9.Configuration

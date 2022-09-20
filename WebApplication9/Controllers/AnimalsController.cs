@@ -1,11 +1,10 @@
-﻿using Microsoft.AspNet.OData;
-using Microsoft.AspNet.OData.Routing;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Routing.Controllers;
 using WebApplication9.Models;
 
 namespace WebApplication9.Controllers
 {
-    [ODataRoutePrefix("Animals")]
+    [Route("Animals")]
     public class AnimalsController : ODataController
     {
         [HttpPut]

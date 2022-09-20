@@ -1,14 +1,14 @@
-using Microsoft.AspNet.OData.Builder;
-using Microsoft.AspNet.OData.Extensions;
+using Asp.Versioning.ApiExplorer;
+using Asp.Versioning.OData;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Linq;
+using Asp.Versioning;
+using Microsoft.AspNetCore.OData;
 
 namespace WebApplication9
 {
@@ -24,16 +24,36 @@ namespace WebApplication9
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllers();
-            services.AddApiVersioning(options => options.ReportApiVersions = true);
-            services.AddOData().EnableApiVersioning();
-            services.AddODataApiExplorer(
-                options =>
+            services.AddControllers().AddOData(options =>
+            {
+                options.EnableQueryFeatures();
+            });
+
+            // allow a client to call you without specifying an api version
+            services
+                .AddApiVersioning(options =>
                 {
-                    // add the versioned api explorer, which also adds IApiVersionDescriptionProvider service
-                    // note: the specified format code will format the version as "'v'major[.minor][-status]"
+                    options.AssumeDefaultVersionWhenUnspecified = true;
+                    options.DefaultApiVersion = new ApiVersion(1, 0);
+                    options.ReportApiVersions = false;
+                })
+                .AddApiExplorer(options =>
+                {
+                    options.GroupNameFormat = "'v'VVV";
+                    options.AssumeDefaultVersionWhenUnspecified = true;
+                    options.DefaultApiVersion = new ApiVersion(1, 0);
+                })
+                .AddOData(options =>
+                {
+                    // versioning by: query string, header, or media type
+                    options.AddRouteComponents("api"); // route prefix
+                })
+                .AddODataApiExplorer(options =>
+                {
+                    // format the version as "'v'major[.minor][-status]"
                     options.GroupNameFormat = "'v'VVV";
                 });
+
             services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
             services.AddSwaggerGen(options =>
             {
@@ -41,6 +61,9 @@ namespace WebApplication9
 
                 //options.CustomSchemaIds(type => $"{type.Assembly.FullName}_{type.FullName}");
             });
+
+            // explicit opt-in - needs to be placed after AddSwaggerGen()
+            services.AddSwaggerGenNewtonsoftSupport();
         }
 
         public void Configure(
@@ -58,8 +81,7 @@ namespace WebApplication9
             app.UseEndpoints(
                 endpoints =>
                 {
-                    endpoints.Count();
-                    endpoints.MapVersionedODataRoute("odata", "api", modelBuilder);
+                    endpoints.MapControllers();
                 });
             app.UseSwagger();
             app.UseSwaggerUI(
